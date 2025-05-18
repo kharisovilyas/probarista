@@ -294,3 +294,19 @@ const model = {
         copyright: '© 2025 ProBarista.'
     }
 };
+
+const shoppingModel = {
+    getCart() {
+        return JSON.parse(localStorage.getItem('cart') || '[]');
+    },
+    addToCart(product, size, name, price) {
+        let cart = this.getCart();
+        const idx = cart.findIndex(item => item.product === product && item.size === size);
+        if (idx !== -1) {
+            cart[idx].quantity += 1;
+        } else {
+            cart.push({ product, size, name, price, quantity: 1 });
+        }
+        localStorage.setItem('cart', JSON.stringify(cart));
+    }
+};

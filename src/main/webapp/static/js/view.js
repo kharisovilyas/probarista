@@ -55,16 +55,23 @@ const view = {
                     <h3>${item.name}</h3>
                     <p class="description">${item.description}</p>
                     <ul class="sizes">
-                        ${item.sizes.map(size => `<li><span>${size.volume}</span><span>${size.price}</span></li>`).join('')}
+                        ${item.sizes.map(size => `
+                            <li>
+                                <span>${size.volume}</span>
+                                <span>${size.price}</span>
+                                <button
+                                    class="add-to-cart-btn"
+                                    data-product="${item.key || item.name}"
+                                    data-size="${size.key || size.volume}"
+                                    data-name="${item.name}"
+                                    data-price="${parseInt(size.price)}"
+                                >В корзину</button>
+                            </li>
+                        `).join('')}
                     </ul>
                 </div>
             </div>
         `).join('');
-        menu.innerHTML = `
-            <h2>Меню</h2>
-            <div class="menu-categories">${categories}</div>
-            <div class="menu-grid">${items}</div>
-        `;
     },
     renderAbout() {
         const about = document.getElementById('about');
@@ -281,13 +288,18 @@ const view = {
         elements.carbs.textContent = data.carbs || 0;
     },
     renderShoppingButton() {
-        const authButtons = document.querySelector('.shopping-button');
-        if (!authButtons) {
+        const shoppingButton = document.querySelector('.shopping-button');
+        if (!shoppingButton) {
             console.error('Элемент .shopping-button не найден');
             return;
         }
-        authButtons.innerHTML = `
-            <i class="fas fa-shopping-cart cart-icon"></i>
+        const cart = shoppingModel.getCart ? shoppingModel.getCart() : [];
+        const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+        shoppingButton.innerHTML = `
+            <a href="shopping.html" class="cart-link" title="Корзина">
+                <i class="fas fa-shopping-cart cart-icon"></i>
+                ${cartCount > 0 ? `<span class="cart-count">${cartCount}</span>` : ''}
+            </a>
         `;
     },
     renderLoginModal() {
