@@ -80,7 +80,7 @@ const model = {
                 category: 'coffee',
                 name: 'Эспрессо',
                 description: 'Классический итальянский эспрессо с насыщенным вкусом и плотной пенкой.',
-                image: 'images/espresso.jpg',
+                image: '/static/images/espresso.jpg',
                 sizes: [
                     {volume: '40 мл', price: '95 ₽'},
                     {volume: '80 мл', price: '125 ₽'},
@@ -91,7 +91,7 @@ const model = {
                 category: 'coffee',
                 name: 'Капучино',
                 description: 'Идеальное сочетание эспрессо и воздушного молока с нежной пенкой.',
-                image: 'images/cappuccino.jpg',
+                image: '/static/images/cappuccino.jpg',
                 sizes: [
                     {volume: '200 мл', price: '155 ₽'},
                     {volume: '300 мл', price: '185 ₽'},
@@ -102,7 +102,7 @@ const model = {
                 category: 'coffee',
                 name: 'Латте',
                 description: 'Нежный кофейный напиток с большим количеством молока.',
-                image: 'images/latte.jpg',
+                image: '/static/images/latte.jpg',
                 sizes: [
                     {volume: '200 мл', price: '155 ₽'},
                     {volume: '300 мл', price: '185 ₽'},
@@ -113,7 +113,7 @@ const model = {
                 category: 'author-drinks',
                 name: 'Раф Лавандовый',
                 description: 'Нежный раф с ароматом лаванды и сливочным вкусом.',
-                image: 'images/raf-lavender.jpg',
+                image: '/static/images/raf-lavender.jpg',
                 sizes: [
                     {volume: '300 мл', price: '195 ₽'}
                 ]
@@ -122,7 +122,7 @@ const model = {
                 category: 'lemonades',
                 name: 'Клубничный мохито',
                 description: 'Освежающий лимонад с клубникой и мятой.',
-                image: 'images/strawberry-mojito.jpg',
+                image: '/static/images/strawberry-mojito.jpg',
                 sizes: [
                     {volume: '400 мл', price: '235 ₽'}
                 ]
@@ -131,7 +131,7 @@ const model = {
                 category: 'juices',
                 name: 'Апельсиновый сок',
                 description: 'Свежий сок из спелых апельсинов.',
-                image: 'images/orange-juice.jpg',
+                image: '/static/images/orange-juice.jpg',
                 sizes: [
                     {volume: '300 мл', price: '175 ₽'},
                     {volume: '400 мл', price: '215 ₽'},
@@ -142,7 +142,7 @@ const model = {
                 category: 'milkshakes',
                 name: 'Молочный коктейль',
                 description: 'Классический ванильный коктейль с мороженым.',
-                image: 'images/milkshake.jpg',
+                image: '/static/images/milkshake.jpg',
                 sizes: [
                     {volume: '300 мл', price: '195 ₽'}
                 ]
@@ -151,7 +151,7 @@ const model = {
                 category: 'protein',
                 name: 'Протеин на молоке',
                 description: 'Питательный коктейль для активного дня.',
-                image: 'images/protein-milk.jpg',
+                image: '/static/images/protein-milk.jpg',
                 sizes: [
                     {volume: '400 мл', price: '245 ₽'}
                 ]
@@ -160,7 +160,7 @@ const model = {
                 category: 'iced',
                 name: 'Айс Латте',
                 description: 'Холодный латте с мягким кофейным вкусом.',
-                image: 'images/iced-latte.jpg',
+                image: '/static/images/iced-latte.jpg',
                 sizes: [
                     {volume: '300 мл', price: '185 ₽'}
                 ]
@@ -169,7 +169,7 @@ const model = {
                 category: 'tea',
                 name: 'Чай',
                 description: 'Ароматный черный или зеленый чай на выбор.',
-                image: 'images/tea.jpg',
+                image: '/static/images/tea.jpg',
                 sizes: [
                     {volume: '300 мл', price: '95 ₽'}
                 ]
@@ -178,7 +178,7 @@ const model = {
                 category: 'additives',
                 name: 'Сироп',
                 description: 'Добавьте любимый вкус к своему напитку.',
-                image: 'images/syrup.jpg',
+                image: '/static/images/syrup.jpg',
                 sizes: [
                     {volume: 'Порция', price: '35 ₽'}
                 ]
