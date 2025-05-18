@@ -1,3 +1,7 @@
+function getCardSubtitle(card) {
+    return card.subtitle || 'Подробности о карте';
+}
+
 const view = {
     renderNav() {
         const nav = document.getElementById('nav');
@@ -51,13 +55,7 @@ const view = {
                     <h3>${item.name}</h3>
                     <p class="description">${item.description}</p>
                     <ul class="sizes">
-                        ${item.sizes.map(size => `
-                            <li>
-                                <span>${size.volume}</span>
-                                <span>${size.price}</span>
-                                <button class="add-to-cart" data-name="${item.name}" data-volume="${size.volume}" data-price="${size.price}">Добавить</button>
-                            </li>
-                        `).join('')}
+                        ${item.sizes.map(size => `<li><span>${size.volume}</span><span>${size.price}</span></li>`).join('')}
                     </ul>
                 </div>
             </div>
@@ -191,11 +189,12 @@ const view = {
             console.error('Элемент #order не найден');
             return;
         }
-        orderSection.style.display = 'block';
+        const currentUser = localStorage.getItem('currentUser');
+        orderSection.style.display = currentUser ? 'block' : 'none';
         orderSection.innerHTML = `
             <h2>Ваш заказ</h2>
-            <p>Здесь вы сможете оформить заказ, выбрав любимые напитки и филиал.</p>
-            <a href="../shopping.html" class="cta-button">Перейти в корзину</a>
+            <p>Добро пожаловать, ${currentUser || 'гость'}! Здесь вы сможете оформить заказ, выбрав любимые напитки и филиал.</p>
+            <p>Функционал заказа находится в разработке. Скоро вы сможете добавлять напитки в корзину и оформлять заказ!</p>
         `;
     },
     renderContacts() {
@@ -281,21 +280,64 @@ const view = {
         elements.fats.textContent = data.fats || 0;
         elements.carbs.textContent = data.carbs || 0;
     },
-
-    renderShoppingBag() {
-        const authButtons = document.querySelector('.shopping-button');
-        const cart = shoppingModel.getCart();
-        const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-
-        if (authButtons) {
-            authButtons.innerHTML = `
-            <a href="shopping.html" class="cart-link" title="Корзина">
-                <i class="fas fa-shopping-cart cart-icon"></i>
-                ${cartCount > 0 ? `<span class="cart-count">${cartCount}</span>` : ''}
-            </a>
-        `;
-        } else {
-            console.error('Element .shopping-button not found in DOM'); // Debug log
+    renderAuthButtons() {
+        const authButtons = document.querySelector('.auth-buttons');
+        if (!authButtons) {
+            console.error('Элемент .auth-buttons не найден');
+            return;
         }
+        authButtons.innerHTML = `
+            <i class="fas fa-shopping-cart cart-icon"></i>
+        `;
+    },
+    renderLoginModal() {
+        const loginModal = document.createElement('div');
+        loginModal.id = 'login-modal';
+        loginModal.className = 'modal';
+        loginModal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">×</span>
+                <h2 class="modal-title">Вход</h2>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Имя пользователя</label>
+                        <input type="text" id="login-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Пароль</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="modal-button">Войти</button>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(loginModal);
+    },
+    renderRegisterModal() {
+        const registerModal = document.createElement('div');
+        registerModal.id = 'register-modal';
+        registerModal.className = 'modal';
+        registerModal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">×</span>
+                <h2 class="modal-title">Регистрация</h2>
+                <form id="register-form">
+                    <div class="form-group">
+                        <label for="register-username">Имя пользователя</label>
+                        <input type="text" id="register-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Пароль</label>
+                        <input type="password" id="register-password" required>
+                    </div>
+                    <button type="submit" class="modal-button">Зарегистрироваться</button>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(registerModal);
     }
 };

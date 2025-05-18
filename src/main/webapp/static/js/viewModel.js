@@ -9,10 +9,14 @@ const viewModel = {
         view.renderOrderSection();
         view.renderContacts();
         view.renderFooter();
-        view.renderShoppingBag();
+        view.renderLoginModal();
+        view.renderRegisterModal();
         this.initEventListeners();
         this.initMap();
-        this.initMenuCategories();
+        this.initAuthModals();
+        this.initAuthForms();
+        this.initOrderForm();
+        this.updateAuthUI();
     },
     initEventListeners() {
         const calcForm = document.getElementById('calc-form');
@@ -23,6 +27,7 @@ const viewModel = {
                 this.calculateKBJU();
             });
         }
+        this.initMenuCategories();
         window.addEventListener('scroll', this.handleScroll);
     },
     calculateKBJU() {
@@ -103,6 +108,149 @@ const viewModel = {
             header.classList.add('scrolled');
         } else {
             header.classList.remove('scrolled');
+        }
+    },
+    initAuthModals() {
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const loginModal = document.getElementById('login-modal');
+        const registerModal = document.getElementById('register-modal');
+        const closeBtns = document.querySelectorAll('.modal .close');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                loginModal.style.display = 'block';
+            });
+        }
+        if (registerBtn) {
+            registerBtn.addEventListener('click', () => {
+                registerModal.style.display = 'block';
+            });
+        }
+        closeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                loginModal.style.display = 'none';
+                registerModal.style.display = 'none';
+            });
+        });
+        window.addEventListener('click', (event) => {
+            if (event.target === loginModal) {
+                loginModal.style.display = 'none';
+            }
+            if (event.target === registerModal) {
+                registerModal.style.display = 'none';
+            }
+        });
+    },
+    initAuthForms() {
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('register-username').value;
+                const password = document.getElementById('register-password').value;
+                const email = document.getElementById('register-email').value;
+                this.registerUser(username, password, email);
+            });
+        }
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                this.loginUser(username, password);
+            });
+        }
+    },
+    initOrderForm() {
+        const orderForm = document.getElementById('order-form');
+        if (orderForm) {
+            orderForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const branch = document.getElementById('branch').value;
+                const item = document.getElementById('order-items').value;
+                this.placeOrder(branch, item);
+            });
+        }
+    },
+    registerUser(username, password, email) {
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        if (users.find(user => user.username === username)) {
+            alert('Пользователь с таким именем уже существует');
+            return;
+        }
+        users.push({ username, password, email });
+        localStorage.setItem('users', JSON.stringify(users));
+        alert('Регистрация успешна');
+        document.getElementById('register-modal').style.display = 'none';
+        localStorage.setItem('currentUser', username);
+        this.updateAuthUI();
+    },
+    loginUser(username, password) {
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        const user = users.find(user => user.username === username && user.password === password);
+        if (user) {
+            alert('Вход успешен');
+            document.getElementById('login-modal').style.display = 'none';
+            localStorage.setItem('currentUser', username);
+            this.updateAuthUI();
+        } else {
+            alert('Неверное имя пользователя или пароль');
+        }
+    },
+    placeOrder(branch, item) {
+        const orders = JSON.parse(localStorage.getItem('orders')) || [];
+        orders.push({ user: localStorage.getItem('currentUser'), branch, item, timestamp: new Date().toISOString() });
+        localStorage.setItem('orders', JSON.stringify(orders));
+        alert(`Заказ (${item}) успешно оформлен в филиале ${model.branches.find(b => b.id === branch).name}`);
+    },
+    updateAuthUI() {
+        const currentUser = localStorage.getItem('currentUser');
+        const authButtons = document.querySelector('.auth-buttons');
+        const orderSection = document.getElementById('order');
+        const header = document.querySelector('.header-fixed');
+        const cart = shoppingModel.getCart();
+        const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+        if (authButtons) {
+            authButtons.innerHTML = `
+                <a href="shopping.html" class="cart-link">
+                    <i class="fas fa-shopping-cart cart-icon"></i>
+                    ${cartCount > 0 ? `<span class="cart-count">${cartCount}</span>` : ''}
+                </a>
+            `;
+        }
+
+        if (currentUser) {
+            authButtons.innerHTML = `
+                <a href="shopping.html" class="cart-link">
+                    <i class="fas fa-shopping-cart cart-icon"></i>
+                    ${cartCount > 0 ? `<span class="cart-count">${cartCount}</span>` : ''}
+                </a>
+                <span class="user-greeting">Привет, ${currentUser}!</span>
+                <button id="logout-btn" class="modal-button">Выйти</button>
+            `;
+            if (orderSection) {
+                orderSection.style.display = 'block';
+            }
+            if (header) {
+                const orderLink = header.querySelector('.auth-buttons a[href="#order"]');
+                if (orderLink) {
+                    orderLink.style.display = 'inline-block';
+                }
+            }
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', () => {
+                    localStorage.removeItem('currentUser');
+                    this.updateAuthUI();
+                });
+            }
+        } else {
+            if (orderSection) {
+                orderSection.style.display = 'none';
+            }
+            this.initAuthModals();
         }
     }
 };
