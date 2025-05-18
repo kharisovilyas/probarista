@@ -8,6 +8,7 @@ const viewModel = {
         view.renderCalculator();
         view.renderOrderSection();
         view.renderContacts();
+        view.renderShoppingButton();
         view.renderFooter();
         view.renderLoginModal();
         view.renderRegisterModal();

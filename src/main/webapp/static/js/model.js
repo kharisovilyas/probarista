@@ -5,7 +5,6 @@ const model = {
         { text: 'О нас', href: '#about' },
         { text: 'Лояльность', href: '#loyalty' },
         { text: 'Калькулятор КБЖУ', href: '#calculator' },
-        { text: 'Заказ', href: '#order' },
         { text: 'Контакты', href: '#contacts' }
     ],
     users: [

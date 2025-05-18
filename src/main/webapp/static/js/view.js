@@ -280,10 +280,10 @@ const view = {
         elements.fats.textContent = data.fats || 0;
         elements.carbs.textContent = data.carbs || 0;
     },
-    renderAuthButtons() {
-        const authButtons = document.querySelector('.auth-buttons');
+    renderShoppingButton() {
+        const authButtons = document.querySelector('.shopping-button');
         if (!authButtons) {
-            console.error('Элемент .auth-buttons не найден');
+            console.error('Элемент .shopping-button не найден');
             return;
         }
         authButtons.innerHTML = `
