@@ -849,7 +849,7 @@ form button, #login-btn, #register-btn, #logout-btn {
 }
 .add-to-cart-btn {
     display: inline-block;
-    background: #38c172;
+    background: var(--primary-color);
     color: #fff;
     border: none;
     border-radius: 24px;
@@ -862,7 +862,7 @@ form button, #login-btn, #register-btn, #logout-btn {
 }
 .add-to-cart-btn:hover,
 .add-to-cart-btn:focus {
-    background: #f672a7;
+    background: var(--secondary-color);
     color: #fff;
 }
 

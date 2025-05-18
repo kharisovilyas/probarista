@@ -72,6 +72,12 @@ const view = {
                 </div>
             </div>
         `).join('');
+        // Добавляем HTML в элемент #menu
+        menu.innerHTML = `
+            <h2>Меню</h2>
+            <div class="menu-categories">${categories}</div>
+            <div class="menu-grid">${items}</div>
+        `;
     },
     renderAbout() {
         const about = document.getElementById('about');
@@ -255,13 +261,6 @@ const view = {
                     <h3>Социальные сети</h3>
                     <div class="social-links">
                         ${model.footer.socialLinks.map(link => `<a href="${link.href}" class="fab fa-${link.platform}"></a>`).join('')}
-                    </div>
-                </div>
-                <div class="footer-section">
-                    <h3>Подписка на новости</h3>
-                    <div class="newsletter-form">
-                        <input type="email" placeholder="Ваш email">
-                        <button>Подписаться</button>
                     </div>
                 </div>
             </div>

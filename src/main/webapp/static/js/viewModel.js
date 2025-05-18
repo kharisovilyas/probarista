@@ -18,8 +18,10 @@ const viewModel = {
         this.initAuthForms();
         this.initOrderForm();
         this.updateAuthUI();
+        this.initMenuCategories();
     },
     initEventListeners() {
+        // Существующий код
         const calcForm = document.getElementById('calc-form');
         if (calcForm) {
             calcForm.addEventListener('submit', (e) => {
@@ -30,6 +32,20 @@ const viewModel = {
         }
         this.initMenuCategories();
         window.addEventListener('scroll', this.handleScroll);
+
+        // Новый код для кнопок "В корзину"
+        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+        addToCartButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const product = button.dataset.product;
+                const size = button.dataset.size;
+                const name = button.dataset.name;
+                const price = parseInt(button.dataset.price);
+                shoppingModel.addToCart(product, size, name, price);
+                view.renderShoppingButton(); // Обновляем иконку корзины
+                alert(`${name} (${size}) добавлен в корзину!`);
+            });
+        });
     },
     calculateKBJU() {
         const drinkKey = document.getElementById('drink').value;
