@@ -72,7 +72,6 @@ const view = {
                 </div>
             </div>
         `).join('');
-        // Добавляем HTML в элемент #menu
         menu.innerHTML = `
             <h2>Меню</h2>
             <div class="menu-categories">${categories}</div>
@@ -263,6 +262,13 @@ const view = {
                         ${model.footer.socialLinks.map(link => `<a href="${link.href}" class="fab fa-${link.platform}"></a>`).join('')}
                     </div>
                 </div>
+                <div class="footer-section">
+                    <h3>Подписка на новости</h3>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Ваш email">
+                        <button>Подписаться</button>
+                    </div>
+                </div>
             </div>
             <div class="footer-bottom">
                 <p>${model.footer.copyright}</p>
@@ -295,9 +301,15 @@ const view = {
         const cart = shoppingModel.getCart ? shoppingModel.getCart() : [];
         const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
         shoppingButton.innerHTML = `
-            <a href="shopping.html" class="cart-link" title="Корзина">
+            <a href="#" class="cart-link" title="Корзина" id="cart-btn">
                 <i class="fas fa-shopping-cart cart-icon"></i>
                 ${cartCount > 0 ? `<span class="cart-count">${cartCount}</span>` : ''}
+            </a>
+            <a href="#" class="profile-link" title="Личный кабинет" id="profile-btn">
+                <i class="fas fa-user"></i>
+            </a>
+            <a href="#" class="qr-link" title="QR-код" id="qr-btn">
+                <i class="fas fa-qrcode"></i>
             </a>
         `;
     },
@@ -350,5 +362,83 @@ const view = {
             </div>
         `;
         document.body.appendChild(registerModal);
+    },
+    renderCartModal() {
+        const cartModal = document.createElement('div');
+        cartModal.id = 'cart-modal';
+        cartModal.className = 'modal';
+        const cart = shoppingModel.getCart();
+        const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        cartModal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">×</span>
+                <h2 class="modal-title">Корзина</h2>
+                <div class="cart-items">
+                    ${cart.length > 0 ? cart.map(item => `
+                        <div class="cart-item">
+                            <span>${item.name} (${item.size})</span>
+                            <span>${item.quantity} x ${item.price} ₽ = ${item.quantity * item.price} ₽</span>
+                        </div>
+                    `).join('') : '<p>Корзина пуста</p>'}
+                </div>
+                <div class="cart-total">
+                    <strong>Итого: ${total} ₽</strong>
+                </div>
+                <button id="place-order-btn" class="modal-button">Заказать</button>
+            </div>
+        `;
+        document.body.appendChild(cartModal);
+    },
+    renderProfileModal() {
+        const profileModal = document.createElement('div');
+        profileModal.id = 'profile-modal';
+        profileModal.className = 'modal';
+        const currentUser = localStorage.getItem('currentUser');
+        let userData = {};
+        if (currentUser) {
+            const user = model.users.find(u => u.name === currentUser);
+            if (user) userData = user;
+        }
+        profileModal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">×</span>
+                <h2 class="modal-title">Личный кабинет</h2>
+                ${currentUser ? `
+                    <p><strong>Имя:</strong> ${userData.name || currentUser}</p>
+                    <p><strong>Email:</strong> ${userData.email || 'Не указан'}</p>
+                    <p><strong>Баллы лояльности:</strong> ${userData.loyaltyPoints || 0}</p>
+                    <h3>История заказов</h3>
+                    ${userData.prevOrders && userData.prevOrders.length > 0 ? `
+                        <ul>
+                            ${userData.prevOrders.map(order => `
+                                <li>
+                                    Заказ #${order.orderId} (${order.timestamp})<br>
+                                    ${order.items.map(item => `${item.name} (${item.size}) x${item.quantity}`).join(', ')}<br>
+                                    Итого: ${order.total}<br>
+                                    Статус: ${order.status}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    ` : '<p>Нет предыдущих заказов</p>'}
+                ` : '<p>Пожалуйста, войдите в аккаунт</p>'}
+            </div>
+        `;
+        document.body.appendChild(profileModal);
+    },
+    renderQRModal() {
+        const qrModal = document.createElement('div');
+        qrModal.id = 'qr-modal';
+        qrModal.className = 'modal';
+        qrModal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">×</span>
+                <h2 class="modal-title">QR-код</h2>
+                <p>Сканируйте QR-код для получения скидки!</p>
+                <div class="qr-placeholder">
+                    <p>[Здесь будет QR-код]</p>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(qrModal);
     }
 };

@@ -15,14 +15,19 @@
   <script src="/static/js/main.js"></script>
 </head>
 <body>
-  <header class="header-fixed">
+<header class="header-fixed">
     <div class="logo">
-      <div class="logo-pb">PB</div>
-      <div class="logo-title">Pro Barista</div>
+      <span class="logo-pb">PB</span>
+      <span class="logo-title">Pro Barista</span>
     </div>
     <nav id="nav"></nav>
-    <div class="shopping-button"></div>
+    <div class="auth-buttons">
+      <button id="login-btn" class="modal-button">Войти</button>
+      <button id="register-btn" class="modal-button">Регистрация</button>
+      <div class="shopping-button"></div>
+    </div>
   </header>
+
   <section class="hero">
     <div class="hero-overlay"></div>
     <div class="hero-content" id="hero-content"></div>
