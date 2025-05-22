@@ -32,21 +32,17 @@ const view = {
         const categoryLabels = {
             all: 'Все',
             coffee: 'Кофе',
-            'author-drinks': 'Авторские напитки',
-            lemonades: 'Лимонады',
-            juices: 'Соки',
-            milkshakes: 'Молочные коктейли',
-            protein: 'Протеиновые коктейли',
-            iced: 'Холодные напитки',
             tea: 'Чай',
-            additives: 'Добавки'
+            desserts: 'Десерты'
         };
         const categories = model.menu.categories.map(category => `
             <button class="category-btn ${category === 'all' ? 'active' : ''}" data-category="${category}">
                 ${categoryLabels[category] || category.charAt(0).toUpperCase() + category.slice(1)}
             </button>
         `).join('');
-        const items = model.menu.items.map(item => `
+        const items = model.menu.items.map(item => {
+            const productKey = Object.keys(model.drinkKeyMapping).find(key => model.drinkNames[model.drinkKeyMapping[key]] === item.name) || item.name;
+            return `
             <div class="menu-card" data-category="${item.category}">
                 <div class="menu-card-image">
                     <img src="${item.image}" alt="${item.name}">
@@ -61,8 +57,8 @@ const view = {
                                 <span>${size.price}</span>
                                 <button
                                     class="add-to-cart-btn"
-                                    data-product="${item.key || item.name}"
-                                    data-size="${size.key || size.volume}"
+                                    data-product="${productKey}"
+                                    data-size="${size.volume}"
                                     data-name="${item.name}"
                                     data-price="${parseInt(size.price)}"
                                 >В корзину</button>
@@ -71,12 +67,14 @@ const view = {
                     </ul>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
         menu.innerHTML = `
             <h2>Меню</h2>
             <div class="menu-categories">${categories}</div>
             <div class="menu-grid">${items}</div>
         `;
+        viewModel.initAddToCartListeners();
     },
     renderAbout() {
         const about = document.getElementById('about');
@@ -173,7 +171,6 @@ const view = {
             small: 'Маленький',
             medium: 'Средний',
             large: 'Большой',
-            xlarge: 'Очень большой',
             single: 'Одна порция'
         };
         const updateSizes = () => {
@@ -203,11 +200,61 @@ const view = {
         }
         const currentUser = localStorage.getItem('currentUser');
         orderSection.style.display = currentUser ? 'block' : 'none';
+        const cart = shoppingModel.getCart();
+        const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
         orderSection.innerHTML = `
-            <h2>Ваш заказ</h2>
-            <p>Добро пожаловать, ${currentUser || 'гость'}! Здесь вы сможете оформить заказ, выбрав любимые напитки и филиал.</p>
-            <p>Функционал заказа находится в разработке. Скоро вы сможете добавлять напитки в корзину и оформлять заказ!</p>
+            <h2>Оформить заказ</h2>
+            ${currentUser ? `
+                <p>Добро пожаловать, ${currentUser}! Выберите филиал и стол для вашего заказа.</p>
+                <form id="order-form">
+                    <div class="form-group">
+                        <label for="branch">Филиал:</label>
+                        <select id="branch" required>
+                            <option value="">Выберите филиал</option>
+                            ${model.branches.map(branch => `<option value="${branch.id}">${branch.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="table">Стол:</label>
+                        <select id="table" required>
+                            <option value="">Выберите стол</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <h3>Ваш заказ</h3>
+                        ${cart.length > 0 ? `
+                            <ul class="order-items">
+                                ${cart.map(item => `
+                                    <li>
+                                        ${item.name} (${item.size}) x${item.quantity} - ${item.price * item.quantity} ₽
+                                    </li>
+                                `).join('')}
+                            </ul>
+                            <p><strong>Итого:</strong> ${total} ₽</p>
+                        ` : '<p>Корзина пуста. Добавьте товары из меню.</p>'}
+                    </div>
+                    <button type="submit" class="modal-button" ${cart.length === 0 ? 'disabled' : ''}>Оформить заказ</button>
+                </form>
+            ` : `
+                <p>Пожалуйста, войдите или зарегистрируйтесь, чтобы оформить заказ.</p>
+                <button id="open-login-from-order" class="modal-button">Войти</button>
+            `}
         `;
+        if (currentUser) {
+            const branchSelect = orderSection.querySelector('#branch');
+            if (branchSelect) {
+                branchSelect.addEventListener('change', () => {
+                    const branchId = branchSelect.value;
+                    viewModel.updateTableOptions(branchId);
+                });
+            }
+        }
+        const openLoginBtn = orderSection.querySelector('#open-login-from-order');
+        if (openLoginBtn) {
+            openLoginBtn.addEventListener('click', () => {
+                document.getElementById('login-modal').style.display = 'block';
+            });
+        }
     },
     renderContacts() {
         const contacts = document.getElementById('contacts');
@@ -293,86 +340,128 @@ const view = {
         elements.carbs.textContent = data.carbs || 0;
     },
     renderShoppingButton() {
-        const shoppingButton = document.querySelector('.shopping-button');
-        if (!shoppingButton) {
-            console.error('Элемент .shopping-button не найден');
+        const authButtons = document.querySelector('.auth-buttons');
+        if (!authButtons) {
+            console.error('Элемент .auth-buttons не найден');
             return;
         }
-        const cart = shoppingModel.getCart ? shoppingModel.getCart() : [];
+        const cart = shoppingModel.getCart();
         const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-        shoppingButton.innerHTML = `
-            <a href="#" class="cart-link" title="Корзина" id="cart-btn">
-                <i class="fas fa-shopping-cart cart-icon"></i>
-                ${cartCount > 0 ? `<span class="cart-count">${cartCount}</span>` : ''}
-            </a>
-            <a href="#" class="profile-link" title="Личный кабинет" id="profile-btn">
-                <i class="fas fa-user"></i>
-            </a>
-            <a href="#" class="qr-link" title="QR-код" id="qr-btn">
-                <i class="fas fa-qrcode"></i>
-            </a>
+        const currentUser = localStorage.getItem('currentUser');
+        authButtons.innerHTML = `
+            ${currentUser ? `
+                <a href="#" class="cart-link" title="Корзина" id="cart-btn">
+                    <i class="fas fa-shopping-cart cart-icon"></i>
+                    ${cartCount > 0 ? `<span class="cart-count">${cartCount}</span>` : ''}
+                </a>
+                <a href="#" class="profile-link" title="Личный кабинет" id="profile-btn">
+                    <i class="fas fa-user"></i>
+                </a>
+                <a href="#" class="qr-link" title="QR-код" id="qr-btn">
+                    <i class="fas fa-qrcode"></i>
+                </a>
+                <span class="user-greeting">Привет, ${currentUser}!</span>
+                <button id="logout-btn" class="modal-button icon-btn" title="Выйти">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            ` : `
+                <a href="#" class="login-link" title="Вход" id="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                </a>
+                <a href="#" class="register-link" title="Регистрация" id="register-btn">
+                    <i class="fas fa-user-plus"></i>
+                </a>
+            `}
         `;
     },
     renderLoginModal() {
-        const loginModal = document.createElement('div');
-        loginModal.id = 'login-modal';
-        loginModal.className = 'modal';
+        let loginModal = document.getElementById('login-modal');
+        if (!loginModal) {
+            loginModal = document.createElement('div');
+            loginModal.id = 'login-modal';
+            loginModal.className = 'modal';
+            document.body.appendChild(loginModal);
+        }
         loginModal.innerHTML = `
             <div class="modal-content">
                 <span class="close">×</span>
-                <h2 class="modal-title">Вход</h2>
+                <h2 class="modal-title handwritten-title">Вход в ProBarista</h2>
                 <form id="login-form">
                     <div class="form-group">
                         <label for="login-username">Имя пользователя</label>
-                        <input type="text" id="login-username" required>
+                        <input type="text" id="login-username" placeholder="Введите имя" required>
                     </div>
                     <div class="form-group">
                         <label for="login-password">Пароль</label>
-                        <input type="password" id="login-password" required>
+                        <input type="password" id="login-password" placeholder="Введите пароль" required>
                     </div>
                     <button type="submit" class="modal-button">Войти</button>
                 </form>
+                <p class="modal-footer">Нет аккаунта? <a href="#" id="switch-to-register">Зарегистрируйтесь</a></p>
             </div>
         `;
-        document.body.appendChild(loginModal);
+        const switchToRegister = loginModal.querySelector('#switch-to-register');
+        if (switchToRegister) {
+            switchToRegister.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginModal.style.display = 'none';
+                document.getElementById('register-modal').style.display = 'block';
+            });
+        }
     },
     renderRegisterModal() {
-        const registerModal = document.createElement('div');
-        registerModal.id = 'register-modal';
-        registerModal.className = 'modal';
+        let registerModal = document.getElementById('register-modal');
+        if (!registerModal) {
+            registerModal = document.createElement('div');
+            registerModal.id = 'register-modal';
+            registerModal.className = 'modal';
+            document.body.appendChild(registerModal);
+        }
         registerModal.innerHTML = `
             <div class="modal-content">
                 <span class="close">×</span>
-                <h2 class="modal-title">Регистрация</h2>
+                <h2 class="modal-title handwritten-title">Регистрация</h2>
                 <form id="register-form">
                     <div class="form-group">
                         <label for="register-username">Имя пользователя</label>
-                        <input type="text" id="register-username" required>
+                        <input type="text" id="register-username" placeholder="Введите имя" required>
                     </div>
                     <div class="form-group">
                         <label for="register-email">Email</label>
-                        <input type="email" id="register-email" required>
+                        <input type="email" id="register-email" placeholder="Введите email" required>
                     </div>
                     <div class="form-group">
                         <label for="register-password">Пароль</label>
-                        <input type="password" id="register-password" required>
+                        <input type="password" id="register-password" placeholder="Введите пароль" required>
                     </div>
                     <button type="submit" class="modal-button">Зарегистрироваться</button>
                 </form>
+                <p class="modal-footer">Уже есть аккаунт? <a href="#" id="switch-to-login">Войдите</a></p>
             </div>
         `;
-        document.body.appendChild(registerModal);
+        const switchToLogin = registerModal.querySelector('#switch-to-login');
+        if (switchToLogin) {
+            switchToLogin.addEventListener('click', (e) => {
+                e.preventDefault();
+                registerModal.style.display = 'none';
+                document.getElementById('login-modal').style.display = 'block';
+            });
+        }
     },
     renderCartModal() {
-        const cartModal = document.createElement('div');
-        cartModal.id = 'cart-modal';
-        cartModal.className = 'modal';
+        let cartModal = document.getElementById('cart-modal');
+        if (!cartModal) {
+            cartModal = document.createElement('div');
+            cartModal.id = 'cart-modal';
+            cartModal.className = 'modal';
+            document.body.appendChild(cartModal);
+        }
         const cart = shoppingModel.getCart();
         const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
         cartModal.innerHTML = `
             <div class="modal-content">
                 <span class="close">×</span>
-                <h2 class="modal-title">Корзина</h2>
+                <h2 class="modal-title handwritten-title">Ваша корзина</h2>
                 <div class="cart-items">
                     ${cart.length > 0 ? cart.map(item => `
                         <div class="cart-item">
@@ -384,61 +473,140 @@ const view = {
                 <div class="cart-total">
                     <strong>Итого: ${total} ₽</strong>
                 </div>
-                <button id="place-order-btn" class="modal-button">Заказать</button>
+                ${cart.length > 0 ? `
+                    <form id="cart-order-form">
+                        <div class="form-group">
+                            <label for="cart-branch">Филиал:</label>
+                            <select id="cart-branch" required>
+                                <option value="">Выберите филиал</option>
+                                ${model.branches.map(branch => `<option value="${branch.id}">${branch.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cart-table">Стол:</label>
+                            <select id="cart-table" required>
+                                <option value="">Выберите стол</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="modal-button" id="place-order-btn">Оформить заказ</button>
+                        <button type="button" class="modal-button secondary" id="clear-cart-btn">Очистить корзину</button>
+                    </form>
+                ` : ''}
             </div>
         `;
-        document.body.appendChild(cartModal);
+        if (cart.length > 0) {
+            const branchSelect = cartModal.querySelector('#cart-branch');
+            if (branchSelect) {
+                branchSelect.addEventListener('change', () => {
+                    const branchId = branchSelect.value;
+                    viewModel.updateCartTableOptions(branchId);
+                });
+            }
+            const clearCartBtn = cartModal.querySelector('#clear-cart-btn');
+            if (clearCartBtn) {
+                clearCartBtn.addEventListener('click', () => {
+                    shoppingModel.clearCart();
+                    view.renderCartModal();
+                    view.renderShoppingButton();
+                    alert('Корзина очищена');
+                });
+            }
+        }
     },
     renderProfileModal() {
-        const profileModal = document.createElement('div');
-        profileModal.id = 'profile-modal';
-        profileModal.className = 'modal';
-        const currentUser = localStorage.getItem('currentUser');
-        let userData = {};
-        if (currentUser) {
-            const user = model.users.find(u => u.name === currentUser);
-            if (user) userData = user;
+        let profileModal = document.getElementById('profile-modal');
+        if (!profileModal) {
+            profileModal = document.createElement('div');
+            profileModal.id = 'profile-modal';
+            profileModal.className = 'modal';
+            document.body.appendChild(profileModal);
         }
+        const currentUser = localStorage.getItem('currentUser');
         profileModal.innerHTML = `
             <div class="modal-content">
                 <span class="close">×</span>
-                <h2 class="modal-title">Личный кабинет</h2>
+                <h2 class="modal-title handwritten-title">Личный кабинет</h2>
                 ${currentUser ? `
-                    <p><strong>Имя:</strong> ${userData.name || currentUser}</p>
-                    <p><strong>Email:</strong> ${userData.email || 'Не указан'}</p>
-                    <p><strong>Баллы лояльности:</strong> ${userData.loyaltyPoints || 0}</p>
+                    <p><strong>Имя:</strong> ${currentUser}</p>
+                    <p><strong>Email:</strong> ${localStorage.getItem('userEmail') || 'Не указан'}</p>
                     <h3>История заказов</h3>
-                    ${userData.prevOrders && userData.prevOrders.length > 0 ? `
-                        <ul>
-                            ${userData.prevOrders.map(order => `
-                                <li>
-                                    Заказ #${order.orderId} (${order.timestamp})<br>
-                                    ${order.items.map(item => `${item.name} (${item.size}) x${item.quantity}`).join(', ')}<br>
-                                    Итого: ${order.total}<br>
-                                    Статус: ${order.status}
-                                </li>
-                            `).join('')}
-                        </ul>
-                    ` : '<p>Нет предыдущих заказов</p>'}
-                ` : '<p>Пожалуйста, войдите в аккаунт</p>'}
+                    <div id="order-history"></div>
+                ` : `
+                    <p>Пожалуйста, войдите в аккаунт</p>
+                    <button id="open-login-from-profile" class="modal-button">Войти</button>
+                `}
             </div>
         `;
-        document.body.appendChild(profileModal);
+        if (currentUser) {
+            viewModel.loadOrderHistory();
+        }
+        const openLoginBtn = profileModal.querySelector('#open-login-from-profile');
+        if (openLoginBtn) {
+            openLoginBtn.addEventListener('click', () => {
+                profileModal.style.display = 'none';
+                document.getElementById('login-modal').style.display = 'block';
+            });
+        }
     },
     renderQRModal() {
-        const qrModal = document.createElement('div');
-        qrModal.id = 'qr-modal';
-        qrModal.className = 'modal';
+        let qrModal = document.getElementById('qr-modal');
+        if (!qrModal) {
+            qrModal = document.createElement('div');
+            qrModal.id = 'qr-modal';
+            qrModal.className = 'modal';
+            document.body.appendChild(qrModal);
+        }
         qrModal.innerHTML = `
             <div class="modal-content">
                 <span class="close">×</span>
-                <h2 class="modal-title">QR-код</h2>
+                <h2 class="modal-title handwritten-title">Ваш QR-код</h2>
                 <p>Сканируйте QR-код для получения скидки!</p>
-                <div class="qr-placeholder">
-                    <p>[Здесь будет QR-код]</p>
-                </div>
+                <div id="qr-code" class="qr-placeholder"></div>
             </div>
         `;
-        document.body.appendChild(qrModal);
+        const currentUser = localStorage.getItem('currentUser');
+        if (currentUser && typeof QRCode !== 'undefined') {
+            const qrCodeContainer = qrModal.querySelector('#qr-code');
+            new QRCode(qrCodeContainer, {
+                text: `https://probarista.ru/discount?user=${currentUser}`,
+                width: 200,
+                height: 200,
+                colorDark: '#3d3d3d',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+    },
+    updateTableOptions(tables) {
+        const tableSelect = document.getElementById('table');
+        if (!tableSelect) return;
+        tableSelect.innerHTML = `
+            <option value="">Выберите стол</option>
+            ${tables.map(table => `<option value="${table.id}">${table.number}</option>`).join('')}
+        `;
+    },
+    updateCartTableOptions(tables) {
+        const tableSelect = document.getElementById('cart-table');
+        if (!tableSelect) return;
+        tableSelect.innerHTML = `
+            <option value="">Выберите стол</option>
+            ${tables.map(table => `<option value="${table.id}">${table.number}</option>`).join('')}
+        `;
+    },
+    updateOrderHistory(orders) {
+        const orderHistory = document.getElementById('order-history');
+        if (!orderHistory) return;
+        orderHistory.innerHTML = orders.length > 0 ? `
+            <ul>
+                ${orders.map(order => `
+                    <li>
+                        Заказ #${order.id} (${new Date(order.timestamp).toLocaleString()})<br>
+                        ${order.items.map(item => `${item.name} (${item.size}) x${item.quantity}`).join(', ')}<br>
+                        Итого: ${order.total} ₽<br>
+                        Статус: ${order.status}
+                    </li>
+                `).join('')}
+            </ul>
+        ` : '<p>Нет предыдущих заказов</p>';
     }
 };

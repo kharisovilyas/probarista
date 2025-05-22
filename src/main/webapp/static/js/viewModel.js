@@ -1,5 +1,5 @@
 const viewModel = {
-    init() {
+    async init() {
         view.renderNav();
         view.renderHero();
         view.renderMenu();
@@ -8,46 +8,40 @@ const viewModel = {
         view.renderCalculator();
         view.renderOrderSection();
         view.renderContacts();
-        view.renderShoppingButton();
         view.renderFooter();
+        view.renderShoppingButton();
         view.renderLoginModal();
         view.renderRegisterModal();
         view.renderCartModal();
         view.renderProfileModal();
         view.renderQRModal();
+        await model.fetchBranches();
+        view.renderOrderSection();
         this.initEventListeners();
         this.initMap();
         this.initAuthModals();
         this.initAuthForms();
-        this.initOrderForm();
+        this.initOrderForms();
         this.updateAuthUI();
-        this.initMenuCategories();
     },
     initEventListeners() {
         const calcForm = document.getElementById('calc-form');
         if (calcForm) {
             calcForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                console.log('Форма калькулятора отправлена');
                 this.calculateKBJU();
             });
         }
-        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
-        addToCartButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const product = button.dataset.product;
-                const size = button.dataset.size;
-                const name = button.dataset.name;
-                const price = parseInt(button.dataset.price);
-                shoppingModel.addToCart(product, size, name, price);
-                view.renderShoppingButton();
-                alert(`${name} (${size}) добавлен в корзину!`);
-            });
-        });
+        this.initAddToCartListeners();
+        this.initMenuCategories();
+        window.addEventListener('scroll', this.handleScroll);
+    },
+    initModalListeners() {
         const cartBtn = document.getElementById('cart-btn');
         if (cartBtn) {
             cartBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                view.renderCartModal();
                 const cartModal = document.getElementById('cart-modal');
                 if (cartModal) {
                     cartModal.style.display = 'block';
@@ -58,6 +52,7 @@ const viewModel = {
         if (profileBtn) {
             profileBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                view.renderProfileModal();
                 const profileModal = document.getElementById('profile-modal');
                 if (profileModal) {
                     profileModal.style.display = 'block';
@@ -68,41 +63,41 @@ const viewModel = {
         if (qrBtn) {
             qrBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                view.renderQRModal();
                 const qrModal = document.getElementById('qr-modal');
                 if (qrModal) {
                     qrModal.style.display = 'block';
                 }
             });
         }
-        const placeOrderBtn = document.getElementById('place-order-btn');
-        if (placeOrderBtn) {
-            placeOrderBtn.addEventListener('click', () => {
-                const currentUser = localStorage.getItem('currentUser');
-                if (!currentUser) {
-                    const loginModal = document.getElementById('login-modal');
-                    if (loginModal) {
-                        loginModal.style.display = 'block';
-                    }
-                } else {
-                    this.placeCartOrder();
-                }
+    },
+    initAddToCartListeners() {
+        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+        addToCartButtons.forEach(button => {
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            newButton.addEventListener('click', () => {
+                const product = newButton.dataset.product;
+                const size = newButton.dataset.size;
+                const name = newButton.dataset.name;
+                const price = parseInt(newButton.dataset.price);
+                shoppingModel.addToCart(product, size, name, price);
+                view.renderShoppingButton();
+                view.renderCartModal();
+                alert(`${name} (${size}) добавлен в корзину!`);
             });
-        }
-        this.initMenuCategories();
-        window.addEventListener('scroll', this.handleScroll);
+        });
     },
     calculateKBJU() {
         const drinkKey = document.getElementById('drink').value;
         const size = document.getElementById('size').value;
         const kbjuKey = model.drinkKeyMapping[drinkKey] || drinkKey;
-        console.log('Drink:', drinkKey, 'Mapped to:', kbjuKey, 'Size:', size);
         const resultCard = document.querySelector('.calc-result');
         if (!resultCard) {
             console.error('Элемент .calc-result не найден');
             return;
         }
         if (!drinkKey || !size || !model.kbju[kbjuKey] || !model.kbju[kbjuKey][size]) {
-            console.warn('КБЖУ недоступно для:', kbjuKey, size);
             resultCard.innerHTML = '<p style="color: red; text-align: center;">КБЖУ для этого напитка или размера недоступно</p>';
             view.updateKBJU({ calories: 0, proteins: 0, fats: 0, carbs: 0 });
             return;
@@ -123,11 +118,10 @@ const viewModel = {
                 </div>
                 <div class="result-item">
                     <span class="result-label">Углеводы</span>
-                    <span class="result-value" id="carbs">0</span>
+                    <span class="result-value" id="carbs">ционировать0</span>
                 </div>
             </div>
         `;
-        console.log('KBJU data:', model.kbju[kbjuKey][size]);
         view.updateKBJU(model.kbju[kbjuKey][size]);
     },
     initMenuCategories() {
@@ -141,6 +135,7 @@ const viewModel = {
                 menuCards.forEach(card => {
                     card.style.display = category === 'all' || card.dataset.category === category ? 'block' : 'none';
                 });
+                this.initAddToCartListeners();
             });
         });
     },
@@ -181,12 +176,14 @@ const viewModel = {
         const qrModal = document.getElementById('qr-modal');
         const closeBtns = document.querySelectorAll('.modal .close');
         if (loginBtn) {
-            loginBtn.addEventListener('click', () => {
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
                 loginModal.style.display = 'block';
             });
         }
         if (registerBtn) {
-            registerBtn.addEventListener('click', () => {
+            registerBtn.addEventListener('click', (e) => {
+                e.preventDefault();
                 registerModal.style.display = 'block';
             });
         }
@@ -200,193 +197,161 @@ const viewModel = {
             });
         });
         window.addEventListener('click', (event) => {
-            if (event.target === loginModal) {
-                loginModal.style.display = 'none';
-            }
-            if (event.target === registerModal) {
-                registerModal.style.display = 'none';
-            }
-            if (event.target === cartModal) {
-                cartModal.style.display = 'none';
-            }
-            if (event.target === profileModal) {
-                profileModal.style.display = 'none';
-            }
-            if (event.target === qrModal) {
-                qrModal.style.display = 'none';
-            }
+            if (event.target === loginModal) loginModal.style.display = 'none';
+            if (event.target === registerModal) registerModal.style.display = 'none';
+            if (event.target === cartModal) cartModal.style.display = 'none';
+            if (event.target === profileModal) profileModal.style.display = 'none';
+            if (event.target === qrModal) qrModal.style.display = 'none';
         });
     },
     initAuthForms() {
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
         if (registerForm) {
-            registerForm.addEventListener('submit', (e) => {
+            registerForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const username = document.getElementById('register-username').value;
                 const password = document.getElementById('register-password').value;
                 const email = document.getElementById('register-email').value;
-                this.registerUser(username, password, email);
+                await this.registerUser(username, password, email);
             });
         }
         if (loginForm) {
-            loginForm.addEventListener('submit', (e) => {
+            loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const username = document.getElementById('login-username').value;
                 const password = document.getElementById('login-password').value;
-                this.loginUser(username, password);
+                await this.loginUser(username, password);
             });
         }
     },
-    initOrderForm() {
+    initOrderForms() {
         const orderForm = document.getElementById('order-form');
         if (orderForm) {
-            orderForm.addEventListener('submit', (e) => {
+            orderForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const branch = document.getElementById('branch').value;
-                const item = document.getElementById('order-items').value;
-                this.placeOrder(branch, item);
+                const branchId = document.getElementById('branch').value;
+                const tableId = document.getElementById('table').value;
+                const username = localStorage.getItem('currentUser');
+                const cart = shoppingModel.getCart();
+                if (cart.length === 0) {
+                    alert('Корзина пуста');
+                    return;
+                }
+                const items = cart.map(item => ({
+                    name: item.name,
+                    size: item.size,
+                    price: item.price,
+                    quantity: item.quantity
+                }));
+                await this.createOrder(username, branchId, tableId, items);
+            });
+        }
+        const cartOrderForm = document.getElementById('cart-order-form');
+        if (cartOrderForm) {
+            cartOrderForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const branchId = document.getElementById('cart-branch').value;
+                const tableId = document.getElementById('cart-table').value;
+                const username = localStorage.getItem('currentUser');
+                const cart = shoppingModel.getCart();
+                if (cart.length === 0) {
+                    alert('Корзина пуста');
+                    return;
+                }
+                const items = cart.map(item => ({
+                    name: item.name,
+                    size: item.size,
+                    price: item.price,
+                    quantity: item.quantity
+                }));
+                await this.createOrder(username, branchId, tableId, items);
+                document.getElementById('cart-modal').style.display = 'none';
             });
         }
     },
-    registerUser(username, password, email) {
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        if (users.find(user => user.username === username)) {
-            alert('Пользователь с таким именем уже существует');
-            return;
-        }
-        users.push({ username, password, email });
-        localStorage.setItem('users', JSON.stringify(users));
-        alert('Регистрация успешна');
-        document.getElementById('register-modal').style.display = 'none';
-        localStorage.setItem('currentUser', username);
-        this.updateAuthUI();
-        // Открываем корзину после регистрации, если она была открыта
-        const cartModal = document.getElementById('cart-modal');
-        if (cartModal && cartModal.style.display === 'block') {
-            this.placeCartOrder();
+    async registerUser(username, password, email) {
+        try {
+            const user = await model.registerUser(username, email, password);
+            localStorage.setItem('currentUser', user.username);
+            localStorage.setItem('userEmail', user.email);
+            alert('Регистрация успешна');
+            document.getElementById('register-modal').style.display = 'none';
+            this.updateAuthUI();
+            view.renderOrderSection();
+        } catch (error) {
+            alert('Ошибка регистрации: ' + error.message);
         }
     },
-    loginUser(username, password) {
-        let users = JSON.parse(localStorage.getItem('users')) || [];
-        const user = users.find(user => user.username === username && user.password === password);
-        if (user) {
+    async loginUser(username, password) {
+        try {
+            const user = await model.loginUser(username, password);
+            localStorage.setItem('currentUser', user.username);
+            localStorage.setItem('userEmail', user.email);
             alert('Вход успешен');
             document.getElementById('login-modal').style.display = 'none';
-            localStorage.setItem('currentUser', username);
             this.updateAuthUI();
-            // Открываем корзину после входа, если она была открыта
-            const cartModal = document.getElementById('cart-modal');
-            if (cartModal && cartModal.style.display === 'block') {
-                this.placeCartOrder();
-            }
-        } else {
-            alert('Неверное имя пользователя или пароль');
+            view.renderOrderSection();
+        } catch (error) {
+            alert('Ошибка входа: Неверное имя пользователя или пароль');
         }
     },
-    placeOrder(branch, item) {
-        const orders = JSON.parse(localStorage.getItem('orders')) || [];
-        orders.push({ user: localStorage.getItem('currentUser'), branch, item, timestamp: new Date().toISOString() });
-        localStorage.setItem('orders', JSON.stringify(orders));
-        alert(`Заказ (${item}) успешно оформлен в филиале ${model.branches.find(b => b.id === branch).name}`);
+    async createOrder(username, branchId, tableId, items) {
+        try {
+            const order = await model.createOrder(username, branchId, tableId, items);
+            shoppingModel.clearCart();
+            view.renderShoppingButton();
+            view.renderCartModal();
+            alert(`Заказ #${order.id} успешно оформлен!`);
+            document.getElementById('order-form')?.reset();
+            view.renderOrderSection();
+        } catch (error) {
+            alert('Ошибка оформления заказа: ' + error.message);
+        }
     },
-    placeCartOrder() {
-        const cart = shoppingModel.getCart();
-        if (cart.length === 0) {
-            alert('Корзина пуста');
-            return;
-        }
-        const currentUser = localStorage.getItem('currentUser');
-        const branch = model.branches[0].id; // Используем первый филиал для простоты
-        const orderId = `ord${Date.now()}`;
-        const items = cart.map(item => ({
-            name: item.name,
-            size: item.size,
-            price: `${item.price} ₽`,
-            quantity: item.quantity
-        }));
-        const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-        const order = {
-            orderId,
-            branchId: branch,
-            items,
-            total: `${total} ₽`,
-            timestamp: new Date().toISOString(),
-            status: 'pending'
-        };
-        let users = model.users;
-        const userIndex = users.findIndex(u => u.name === currentUser);
-        if (userIndex !== -1) {
-            users[userIndex].prevOrders.push(order);
-            users[userIndex].loyaltyPoints += Math.floor(total / 10); // 1 балл за каждые 10 ₽
-        }
-        localStorage.setItem('cart', '[]'); // Очищаем корзину
-        view.renderShoppingButton();
-        document.getElementById('cart-modal').style.display = 'none';
-        alert(`Заказ #${orderId} успешно оформлен!`);
+    async updateTableOptions(branchId) {
+        if (!branchId) return;
+        const tables = await model.fetchTables(branchId);
+        view.updateTableOptions(tables);
+    },
+    async updateCartTableOptions(branchId) {
+        if (!branchId) return;
+        const tables = await model.fetchTables(branchId);
+        view.updateCartTableOptions(tables);
+    },
+    async loadOrderHistory() {
+        const username = localStorage.getItem('currentUser');
+        if (!username) return;
+        const orders = await model.getUserOrders(username);
+        view.updateOrderHistory(orders);
     },
     updateAuthUI() {
         const currentUser = localStorage.getItem('currentUser');
         const authButtons = document.querySelector('.auth-buttons');
         const orderSection = document.getElementById('order');
-        const header = document.querySelector('.header-fixed');
-        const cart = shoppingModel.getCart();
-        const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-
         if (authButtons) {
-            authButtons.innerHTML = `
-                <a href="#" class="cart-link" title="Корзина" id="cart-btn">
-                    <i class="fas fa-shopping-cart cart-icon"></i>
-                    ${cartCount > 0 ? `<span class="cart-count">${cartCount}</span>` : ''}
-                </a>
-                <a href="#" class="profile-link" title="Личный кабинет" id="profile-btn">
-                    <i class="fas fa-user"></i>
-                </a>
-                <a href="#" class="qr-link" title="QR-код" id="qr-btn">
-                    <i class="fas fa-qrcode"></i>
-                </a>
-            `;
+            view.renderShoppingButton();
         }
-
         if (currentUser) {
-            authButtons.innerHTML = `
-                <a href="#" class="cart-link" title="Корзина" id="cart-btn">
-                    <i class="fas fa-shopping-cart cart-icon"></i>
-                    ${cartCount > 0 ? `<span class="cart-count">${cartCount}</span>` : ''}
-                </a>
-                <a href="#" class="profile-link" title="Личный кабинет" id="profile-btn">
-                    <i class="fas fa-user"></i>
-                </a>
-                <a href="#" class="qr-link" title="QR-код" id="qr-btn">
-                    <i class="fas fa-qrcode"></i>
-                </a>
-                <span class="user-greeting">Привет, ${currentUser}!</span>
-                <button id="logout-btn" class="modal-button">Выйти</button>
-            `;
             if (orderSection) {
                 orderSection.style.display = 'block';
-            }
-            if (header) {
-                const orderLink = header.querySelector('.auth-buttons a[href="#order"]');
-                if (orderLink) {
-                    orderLink.style.display = 'inline-block';
-                }
             }
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', () => {
                     localStorage.removeItem('currentUser');
+                    localStorage.removeItem('userEmail');
                     this.updateAuthUI();
+                    view.renderOrderSection();
                 });
             }
         } else {
             if (orderSection) {
                 orderSection.style.display = 'none';
             }
-            this.initAuthModals();
         }
-
-        // Переинициализируем обработчики для новых кнопок
-        this.initEventListeners();
+        this.initAuthModals();
+        this.initModalListeners();
+        this.initOrderForms();
     }
 };
