@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface OrderRepository extends MongoRepository<OrderEntity, String> {
     List<OrderEntity> findByUserId(String userId);
+    List<OrderEntity> findByBranchId(String branchId);
 }

@@ -17,4 +17,24 @@ public class TableEntity {
     public BranchEntity getBranch() {
         return branch;
     }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getNumber() {
+        return number;
+    }
+
+    public void setNumber(String number) {
+        this.number = number;
+    }
+
+    public void setBranch(BranchEntity branch) {
+        this.branch = branch;
+    }
 }

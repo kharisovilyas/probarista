@@ -1,40 +1,27 @@
 package ru.ilcorp.probarista.controllers.api.v1;
 
-import ru.ilcorp.probarista.model.entity.BranchEntity;
-import ru.ilcorp.probarista.model.entity.OrderEntity;
-import ru.ilcorp.probarista.model.entity.OrderItemEntity;
-import ru.ilcorp.probarista.model.entity.TableEntity;
-import ru.ilcorp.probarista.repository.BranchRepository;
-import ru.ilcorp.probarista.repository.TableRepository;
-import ru.ilcorp.probarista.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.ilcorp.probarista.model.entity.OrderEntity;
+import ru.ilcorp.probarista.model.entity.OrderItemEntity;
+import ru.ilcorp.probarista.repository.OrderRepository;
+import ru.ilcorp.probarista.service.OrderService;
 
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 public class OrderController {
 
     private final OrderService orderService;
-    private final BranchRepository branchRepository;
-    private final TableRepository tableRepository;
+    private final OrderRepository orderRepository;
 
-    public OrderController(OrderService orderService, BranchRepository branchRepository, TableRepository tableRepository) {
+    @Autowired
+    public OrderController(OrderService orderService, OrderRepository orderRepository) {
         this.orderService = orderService;
-        this.branchRepository = branchRepository;
-        this.tableRepository = tableRepository;
-    }
-
-    @GetMapping("/branches")
-    public ResponseEntity<List<BranchEntity>> getBranches() {
-        return ResponseEntity.ok(branchRepository.findAll());
-    }
-
-    @GetMapping("/tables/{branchId}")
-    public ResponseEntity<List<TableEntity>> getTablesByBranch(@PathVariable String branchId) {
-        return ResponseEntity.ok(tableRepository.findByBranchId(branchId));
+        this.orderRepository = orderRepository;
     }
 
     @PostMapping("/orders")
@@ -58,7 +45,12 @@ public class OrderController {
     }
 
     @GetMapping("/orders")
-    public ResponseEntity<List<OrderEntity>> getUserOrders(@RequestParam String username) {
-        return ResponseEntity.ok(orderService.getUserOrders(username));
+    public ResponseEntity<List<OrderEntity>> getOrders(@RequestParam(required = false) String username, @RequestParam(required = false) String branchId) {
+        if (username != null) {
+            return ResponseEntity.ok(orderService.getUserOrders(username));
+        } else if (branchId != null) {
+            return ResponseEntity.ok(orderRepository.findByBranchId(branchId));
+        }
+        return ResponseEntity.badRequest().body(null);
     }
 }

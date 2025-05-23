@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <title>Панель администратора | ProBarista</title>
+    <script src="/static/js/adminModel.js"></script>
+    <script src="/static/js/adminView.js"></script>
+    <script src="/static/js/adminViewModel.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body class="admin-loaded">
+<header class="header-fixed">
+    <div class="logo">
+        <span class="logo-pb">ProBarista</span>
+        <span class="logo-title">Админ-панель</span>
+    </div>
+    <nav id="nav">
+        <a href="/">На главную</a>
+        <a href="/admin">Филиалы и столики</a>
+    </nav>
+    <div class="auth-buttons">
+        <!-- Будет обновляться через JS -->
+    </div>
+</header>
+
+<section class="admin">
+    <div class="admin-container">
+        <h2 class="handwritten-title">Управление филиалами</h2>
+        <button id="add-branch-btn" class="modal-button">Добавить филиал</button>
+        <div id="branches-list" class="branches-grid">
+            <!-- Список филиалов рендерится через JS -->
+        </div>
+        <div id="orders-list" class="orders-list">
+            <!-- Список заказов рендерится через JS -->
+        </div>
+    </div>
+</section>
+
+<!-- Модалка для добавления филиала -->
+<div id="add-branch-modal" class="modal">
+    <!-- Контент рендерится через JS -->
+</div>
+
+<!-- Модалка для управления столиками -->
+<div id="manage-tables-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">×</span>
+        <h2 class="modal-title handwritten-title">Управление столиками</h2>
+        <div id="tables-list" class="tables-list">
+            <!-- Список столиков рендерится через JS -->
+        </div>
+        <form id="add-table-form">
+            <div class="form-group">
+                <label for="table-number">Номер столика</label>
+                <input type="number" id="table-number" placeholder="Введите номер" min="1" required>
+            </div>
+            <button type="submit" class="modal-button">Добавить столик</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

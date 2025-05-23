@@ -119,7 +119,7 @@ const model = {
     },
     async fetchBranches() {
         try {
-            const response = await fetch('/api/branches');
+            const response = await fetch('/api/v1/v1/branches');
             if (!response.ok) throw new Error('Failed to fetch branches');
             const branches = await response.json();
             this.branches = branches.map(branch => ({
@@ -136,7 +136,7 @@ const model = {
     },
     async fetchTables(branchId) {
         try {
-            const response = await fetch(`/api/tables/${branchId}`);
+            const response = await fetch(`/api/v1/tables/${branchId}`);
             if (!response.ok) throw new Error('Failed to fetch tables');
             const tables = await response.json();
             this.tables = tables.map(table => ({
@@ -152,7 +152,7 @@ const model = {
     },
     async registerUser(username, email, password) {
         try {
-            const response = await fetch('/api/auth/register', {
+            const response = await fetch('/api/v1/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password })
@@ -166,7 +166,7 @@ const model = {
     },
     async loginUser(username, password) {
         try {
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch('/api/v1/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -180,7 +180,7 @@ const model = {
     },
     async createOrder(username, branchId, tableId, items) {
         try {
-            const response = await fetch('/api/orders', {
+            const response = await fetch('/api/v1/orders', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, branchId, tableId, items })
@@ -194,7 +194,7 @@ const model = {
     },
     async getUserOrders(username) {
         try {
-            const response = await fetch(`/api/orders?username=${username}`);
+            const response = await fetch(`/api/v1/orders?username=${username}`);
             if (!response.ok) throw new Error('Failed to fetch orders');
             return await response.json();
         } catch (error) {

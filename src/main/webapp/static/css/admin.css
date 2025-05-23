@@ -1,0 +1,122 @@
+.admin {
+  padding: 100px 5vw;
+  background: var(--background-color);
+}
+
+.admin-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.branches-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.branch-card {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  text-align: left;
+}
+
+.branch-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.branch-card h3 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+  font-family: 'Caveat', cursive;
+  font-size: 1.8rem;
+}
+
+.branch-card p {
+  color: var(--text-color);
+  margin-bottom: 15px;
+}
+
+.branch-card .actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.branch-card .action-btn {
+  background: var(--primary-color);
+  color: var(--white);
+  border: none;
+  padding: 8px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.branch-card .action-btn:hover {
+  background: var(--secondary-color);
+}
+
+.branch-card .delete-btn {
+  background: #e57373;
+}
+
+.branch-card .delete-btn:hover {
+  background: #d32f2f;
+}
+
+.tables-list {
+  margin-bottom: 20px;
+}
+
+.table-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.table-item:last-child {
+  border-bottom: none;
+}
+
+.table-item span {
+  color: var(--primary-color);
+}
+
+.table-item .delete-btn {
+  background: #e57373;
+  color: var(--white);
+  border: none;
+  padding: 5px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.table-item .delete-btn:hover {
+  background: #d32f2f;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .branches-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .branch-card .actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .branch-card .action-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
