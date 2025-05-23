@@ -14,7 +14,7 @@ const viewModel = {
         view.renderRegisterModal();
         view.renderCartModal();
         view.renderProfileModal();
-        view.renderQRModal();
+        this.renderQRModal();
         await model.fetchBranches();
         view.renderOrderSection();
         this.initEventListeners();
@@ -35,6 +35,53 @@ const viewModel = {
         this.initAddToCartListeners();
         this.initMenuCategories();
         window.addEventListener('scroll', this.handleScroll);
+    },
+    renderQRModal() {
+        console.log('Инициализация renderQRModal');
+        let qrModal = document.getElementById('qr-modal');
+        if (!qrModal) {
+            qrModal = document.createElement('div');
+            qrModal.id = 'qr-modal';
+            qrModal.className = 'modal';
+            document.body.appendChild(qrModal);
+            console.log('Модальное окно #qr-modal создано');
+        }
+        qrModal.innerHTML = `
+            <div class="modal-content">
+                <span class="close">×</span>
+                <h2 class="modal-title handwritten-title">Ваш QR-код</h2>
+                <div id="qr-code" class="qr-placeholder"><img id="qr-image" src="" alt="QR-код" style="display: none;"></div>
+            </div>
+        `;
+        // Задаём фиксированный текст для QR-кода
+        const qrText = 'https://probarista.example.com'; // Замените на нужный URL или текст
+        const qrImage = qrModal.querySelector('#qr-image');
+
+        // Генерация QR-кода сразу при открытии
+        (async () => {
+            try {
+                console.log('Отправка запроса на сервер для генерации QR-кода:', qrText);
+                const response = await fetch(`/generate-qr?text=${encodeURIComponent(qrText)}`);
+                if (!response.ok) {
+                    throw new Error('Ошибка сервера: ' + response.status);
+                }
+                const blob = await response.blob();
+                qrImage.src = URL.createObjectURL(blob);
+                qrImage.style.display = 'block';
+                console.log('QR-код успешно получен и отображён');
+            } catch (error) {
+                console.error('Ошибка генерации QR-кода:', error);
+                alert('Произошла ошибка при генерации QR-кода: ' + error.message);
+            }
+        })();
+
+        const closeBtn = qrModal.querySelector('.close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                qrModal.style.display = 'none';
+                console.log('Модальное окно закрыто');
+            });
+        }
     },
     initModalListeners() {
         const cartBtn = document.getElementById('cart-btn');
@@ -63,7 +110,7 @@ const viewModel = {
         if (qrBtn) {
             qrBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                view.renderQRModal();
+                this.renderQRModal();
                 const qrModal = document.getElementById('qr-modal');
                 if (qrModal) {
                     qrModal.style.display = 'block';
@@ -118,7 +165,7 @@ const viewModel = {
                 </div>
                 <div class="result-item">
                     <span class="result-label">Углеводы</span>
-                    <span class="result-value" id="carbs">ционировать0</span>
+                    <span class="result-value" id="carbs">0</span>
                 </div>
             </div>
         `;

@@ -109,7 +109,7 @@ const view = {
                     <div class="loyalty-card">
                         <i class="${card.icon} loyalty-icon"></i>
                         <h3>${card.title}</h3>
-                        <p class="card-subtitle">${card.subtitle}</p>
+                        <p class="card-subtitle">${getCardSubtitle(card)}</p>
                         <p>${card.description}</p>
                     </div>
                 `).join('')}
@@ -506,8 +506,8 @@ const view = {
             if (clearCartBtn) {
                 clearCartBtn.addEventListener('click', () => {
                     shoppingModel.clearCart();
-                    view.renderCartModal();
-                    view.renderShoppingButton();
+                    this.renderCartModal();
+                    this.renderShoppingButton();
                     alert('Корзина очищена');
                 });
             }
@@ -545,35 +545,6 @@ const view = {
             openLoginBtn.addEventListener('click', () => {
                 profileModal.style.display = 'none';
                 document.getElementById('login-modal').style.display = 'block';
-            });
-        }
-    },
-    renderQRModal() {
-        let qrModal = document.getElementById('qr-modal');
-        if (!qrModal) {
-            qrModal = document.createElement('div');
-            qrModal.id = 'qr-modal';
-            qrModal.className = 'modal';
-            document.body.appendChild(qrModal);
-        }
-        qrModal.innerHTML = `
-            <div class="modal-content">
-                <span class="close">×</span>
-                <h2 class="modal-title handwritten-title">Ваш QR-код</h2>
-                <p>Сканируйте QR-код для получения скидки!</p>
-                <div id="qr-code" class="qr-placeholder"></div>
-            </div>
-        `;
-        const currentUser = localStorage.getItem('currentUser');
-        if (currentUser && typeof QRCode !== 'undefined') {
-            const qrCodeContainer = qrModal.querySelector('#qr-code');
-            new QRCode(qrCodeContainer, {
-                text: `https://probarista.ru/discount?user=${currentUser}`,
-                width: 200,
-                height: 200,
-                colorDark: '#3d3d3d',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
             });
         }
     },

@@ -83,6 +83,10 @@ const adminModel = {
     },
 
     async deleteBranch(branchId) {
+        if (!branchId) {
+            console.error('branchId не указан для удаления филиала');
+            throw new Error('branchId не указан');
+        }
         try {
             console.debug(`Удаление филиала ${branchId}...`);
             const response = await fetch(`/api/v1/branches/${branchId}`, {

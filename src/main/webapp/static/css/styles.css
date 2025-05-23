@@ -933,6 +933,19 @@ footer {
   border-bottom: 1px solid #eee;
 }
 
+.qr-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+    min-height: 200px;
+}
+
+.qr-placeholder img {
+    max-width: 200px;
+    max-height: 200px;
+}
+
 /* Animations */
 @keyframes fadeInUp {
   from {
